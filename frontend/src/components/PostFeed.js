@@ -1,264 +1,84 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaComment, FaHeart, FaEnvelope } from "react-icons/fa";
-//import ChatMessages from "./ChatMessages"; // Import ChatMessages component
+import PostForm from "./PostForm";
 
-const PostFeed = ({ isLoggedIn }) => {
+const API = window.location.hostname === 'localhost' ? 'http://localhost:4000' : '';
+
+
+
+const PostFeed = () => {
   const [posts, setPosts] = useState([]);
-  const [category, setCategory] = useState("All");
-  const [comments, setComments] = useState({});
-  const [newComment, setNewComment] = useState({});
-  const [commentingPostId, setCommentingPostId] = useState(null);
-  const [lovedPosts, setLovedPosts] = useState({});
-  const [viewMoreComments, setViewMoreComments] = useState({});
-  //const [showChat, setShowChat] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState(null);
-
-  // Fetch posts from the backend
-  useEffect(() => {
-    fetchPosts();
-  }, [category]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const fetchPosts = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get("http://localhost:4000/api/v1/posts");
-      const allPosts = response.data;
-
-      // Filter posts by category
-      const filteredPosts =
-        category === "All"
-          ? allPosts
-          : allPosts.filter((post) => post.category === category);
-
-      setPosts(filteredPosts);
-
-      // Initialize comments state for each post
-      const initialComments = {};
-      filteredPosts.forEach((post) => {
-        initialComments[post._id] = post.comments || [];
-      });
-      setComments(initialComments);
-    } catch (error) {
-      console.error("Error fetching posts:", error);
+      const response = await axios.get(`${API}/api/posts`);
+      setPosts(response.data.posts);
+    } catch (err) {
+      console.error("Error fetching posts:", err);
+      setError("Failed to load posts.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCategoryChange = (selectedCategory) => {
-    setCategory(selectedCategory);
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleDateString([], {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
-
-  const handleAddComment = async (postId) => {
-    const commentText = newComment[postId]?.trim();
-    if (commentText !== "") {
-      const tempComment = {
-        comment: commentText,
-        _id: Date.now(),
-        createdAt: new Date().toISOString(),
-      };
-
-      // Optimistically update comments UI
-      setComments((prevComments) => ({
-        ...prevComments,
-        [postId]: [...(prevComments[postId] || []), tempComment],
-      }));
-
-      try {
-        const response = await axios.post(
-          `http://localhost:4000/api/v1/posts/${postId}/comments`,
-          { comment: commentText }
-        );
-
-        const savedComment = response.data;
-
-        // Replace temporary comment with the saved comment
-        setComments((prevComments) => ({
-          ...prevComments,
-          [postId]: prevComments[postId].map((c) =>
-            c._id === tempComment._id ? savedComment : c
-          ),
-        }));
-      } catch (error) {
-        console.error("Error adding comment:", error);
-      }
-
-      setNewComment((prev) => ({ ...prev, [postId]: "" }));
-      setCommentingPostId(null);
-    }
-  };
-
-  const handleInputChange = (postId, value) => {
-    setNewComment((prev) => ({
-      ...prev,
-      [postId]: value,
-    }));
-  };
-
-  const handleHeartClick = (postId) => {
-    setLovedPosts((prevLovedPosts) => ({
-      ...prevLovedPosts,
-      [postId]: !prevLovedPosts[postId],
-    }));
-  };
-
-  const handleViewMoreClick = (postId) => {
-    setViewMoreComments((prev) => ({
-      ...prev,
-      [postId]: true,
-    }));
-  };
-
-  // const handleChatButtonClick = (postId) => {
-  //   setSelectedPostId(postId);
-  //   setShowChat(true);
-  // };
 
   return (
-    <div style={{ padding: "20px" }}>
-      {/* Category Filter Buttons */}
-      <div style={{ marginBottom: "20px" }}>
-        {["All", "Lend Items", "Services", "General", "Pay for Work"].map(
-          (cat) => (
-            <button
-              key={cat}
-              onClick={() => handleCategoryChange(cat)}
-              style={{
-                padding: "10px 15px",
-                margin: "0 10px 10px 0",
-                backgroundColor: category === cat ? "#007BFF" : "#f0f0f0",
-                color: category === cat ? "#fff" : "#000",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-              }}
-            >
-              {cat}
-            </button>
-          )
-        )}
+    <div className="posts-container">
+      <div className="posts-header">
+        <h1 className="posts-title">Community Feed</h1>
       </div>
 
-      {/* Post Feed */}
-      <div>
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <div
-              key={post._id}
-              style={{
-                border: "1px solid #ddd",
-                padding: "20px",
-                marginBottom: "10px",
-                borderRadius: "5px",
-              }}
-            >
-              <h3>{post.title}</h3>
-              <p>{post.description}</p>
+      <PostForm onPostCreated={fetchPosts} />
 
-              {/* Action Buttons */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: "10px",
-                }}
-              >
-                <button
-                  onClick={() => setCommentingPostId(post._id)}
-                  style={{ background: "none", border: "none", cursor: "pointer" }}
-                >
-                  <FaComment /> Comment
-                </button>
-                <button
-                  //onClick={() => handleChatButtonClick(post._id)}
-                  style={{ background: "none", border: "none", cursor: "pointer" }}
-                >
-                  <FaEnvelope /> Chat
-                </button>
-                <button
-                  onClick={() => handleHeartClick(post._id)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: lovedPosts[post._id] ? "red" : "black",
-                  }}
-                >
-                  <FaHeart /> Love
-                </button>
+      {loading ? (
+        <div className="loading-screen">Loading posts...</div>
+      ) : error ? (
+        <div className="alert alert-error">{error}</div>
+      ) : posts.length === 0 ? (
+        <div className="chat-empty">No posts yet. Be the first to share something!</div>
+      ) : (
+        <div className="posts-list">
+          {posts.map((post) => (
+            <div key={post._id} className="post-card">
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "12px" }}>
+                <span style={{ fontWeight: "700", fontSize: "14px" }}>{post.username}</span>
+                <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>
+                  {formatDate(post.createdAt)}
+                </span>
               </div>
 
-              {/* Comments Section */}
-              <div>
-                {comments[post._id] && comments[post._id].length > 0 ? (
-                  <>
-                    {(viewMoreComments[post._id]
-                      ? comments[post._id]
-                      : comments[post._id].slice(0, 2)
-                    ).map((comment, index) => (
-                      <div key={index}>
-                        <p>{comment.comment}</p>
-                      </div>
-                    ))}
+              <p className="post-card-desc" style={{ color: "var(--text-primary)", whiteSpace: "pre-wrap" }}>
+                {post.caption}
+              </p>
 
-                    {comments[post._id].length > 2 &&
-                      !viewMoreComments[post._id] && (
-                        <button
-                          onClick={() => handleViewMoreClick(post._id)}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: "#007BFF",
-                            cursor: "pointer",
-                          }}
-                        >
-                          View More Comments
-                        </button>
-                      )}
-                  </>
-                ) : (
-                  <p>No comments yet.</p>
-                )}
-
-                {/* Add Comment Input */}
-                {commentingPostId === post._id && (
-                  <div>
-                    <input
-                      type="text"
-                      value={newComment[post._id] || ""}
-                      onChange={(e) =>
-                        handleInputChange(post._id, e.target.value)
-                      }
-                      placeholder="Add a comment..."
-                      style={{
-                        padding: "8px",
-                        width: "200px",
-                        marginRight: "10px",
-                      }}
-                    />
-                    <button
-                      onClick={() => handleAddComment(post._id)}
-                      style={{
-                        backgroundColor: "#f0f0f0",
-                        border: "1px solid #ddd",
-                        cursor: "pointer",
-                        padding: "5px 10px",
-                      }}
-                    >
-                      Save
-                    </button>
-                  </div>
-                )}
-              </div>
+              {post.imageUrl && (
+                <div style={{ marginTop: "16px", borderRadius: "8px", overflow: "hidden", border: "1px solid var(--border)" }}>
+                  <img
+                    src={`${API}${post.imageUrl}`}
+                    alt="Post content"
+                    style={{ width: "100%", display: "block", maxHeight: "500px", objectFit: "cover" }}
+                  />
+                </div>
+              )}
             </div>
-          ))
-        ) : (
-          <p>No posts available in this category.</p>
-        )}
-      </div>
-
-      {/* Chat Component
-      {showChat && selectedPostId && (
-        <ChatMessages postId={selectedPostId} closeChat={() => setShowChat(false)} />
-      )} */}
+          ))}
+        </div>
+      )}
     </div>
   );
 };

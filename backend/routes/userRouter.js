@@ -1,33 +1,31 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
-import User from '../models/User.js'; // Import the User model
+import User from '../models/User.js';
 
 const router = express.Router();
 
-// Handle user signup
+// POST /api/v1/user/signup — Register a new user
 router.post('/signup', async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
 
-  // Check if email already exists
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return res.status(400).json({ message: "Email already in use" });
+  if (!name || !email || !password) {
+    return res.status(400).json({ success: false, message: 'All fields are required.' });
   }
 
-  // Hash the password
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Save the new user to the database
-  const newUser = new User({
-    email,
-    password: hashedPassword,
-  });
-
   try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'Email already in use.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({ name, email, password: hashedPassword });
     await newUser.save();
-    res.status(201).json({ message: "User created successfully!" });
+
+    res.status(201).json({ success: true, message: 'User created successfully!' });
   } catch (error) {
-    res.status(500).json({ message: "Error saving user", error });
+    console.error('Signup error:', error);
+    res.status(500).json({ success: false, message: 'Error creating user.' });
   }
 });
 

@@ -1,13 +1,27 @@
 import express from "express";
-import { createPost, getPosts } from "../controllers/postController.js";
-import { addComment } from "../controllers/postController.js";
+import multer from "multer";
+import path from "path";
+import { createPost, getPosts, getUserPosts } from "../controllers/postController.js";
+import { isAuthorized } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// Define routes
-router.get("/", getPosts); // Route to fetch posts
-router.post("/", createPost); // Route to create a post
-router.route("/:postId/comment").post(addComment); // Route to add a comment to a post
+// Multer storage configuration
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/posts/");
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        cb(null, uniqueSuffix + path.extname(file.originalname));
+    },
+});
 
+const upload = multer({ storage });
+
+// Routes
+router.get("/", getPosts);
+router.post("/", isAuthorized, upload.single("image"), createPost);
+router.get("/user/:userId", getUserPosts);
 
 export default router;

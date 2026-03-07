@@ -1,22 +1,58 @@
-import app from "./app.js";
-import path from "path";
-import express from "express";
-import { fileURLToPath } from "url";
+import http from 'http';
+import { Server } from 'socket.io';
+import app from './app.js';
+import dotenv from 'dotenv';
+import Message from './models/Message.js';
 
-// Get the directory name of the current module (for ES module compatibility)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+dotenv.config({ path: './config/config.env' });
 
-// Serve static files from the React frontend app
-app.use(express.static(path.join(__dirname, "build")));
+const PORT = process.env.PORT || 4000;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
-// Route all unknown requests to the React frontend
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "build", "index.html"));
+// Create HTTP server from Express app
+const server = http.createServer(app);
+
+// Attach Socket.IO to the HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: FRONTEND_URL,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
 });
 
-// Start the backend server
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+// Socket.IO — real-time chat events
+io.on('connection', (socket) => {
+  console.log(`[Socket] User connected: ${socket.id}`);
+
+  // Client sends a chat message
+  socket.on('send_message', async (data) => {
+    const { sender, text } = data;
+
+    if (!sender || !text || text.trim() === '') return;
+
+    try {
+      // Persist to MongoDB
+      const message = await Message.create({ sender: sender.trim(), text: text.trim() });
+
+      // Broadcast to ALL connected clients (including sender)
+      io.emit('receive_message', {
+        _id: message._id,
+        sender: message.sender,
+        text: message.text,
+        createdAt: message.createdAt,
+      });
+    } catch (error) {
+      console.error('[Socket] Error saving message:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log(`[Socket] User disconnected: ${socket.id}`);
+  });
+});
+
+// Start the server
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

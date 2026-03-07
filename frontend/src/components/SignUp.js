@@ -1,88 +1,114 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-export default function Signup() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const API = window.location.hostname === 'localhost' ? 'http://localhost:4000' : '';
+
+
+
+function SignUp() {
   const navigate = useNavigate();
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+    setError('');
+    setSuccess('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:4000/api/v1/user/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password }),
-    });
-  
-    const data = await response.json();
-    if (response.ok) {
-      navigate("/"); // Navigate automatically to PostFeed.js page ("/")
-    } else {
-      alert(data.message || "Signup failed");
+    if (!form.name || !form.email || !form.password) {
+      setError('All fields are required.');
+      return;
+    }
+    if (form.password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    setLoading(true);
+    try {
+      await axios.post(`${API}/api/v1/user/signup`, {
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+      });
+      setSuccess('Account created! Redirecting to login…');
+      setTimeout(() => navigate('/login'), 1500);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>Sign Up</h2>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          type="email"
-          placeholder="Enter your Gmail ID"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          style={styles.input}
-        />
-        <input
-          type="password"
-          placeholder="Set Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          style={styles.input}
-        />
-        <button type="submit" style={styles.button}>SIGN UP</button>
-      </form>
+    <div className="content-center">
+      <div className="card">
+        <h1 className="card-title">Create account</h1>
+        <p className="card-subtitle">Join CommUnity today</p>
+
+        {error && <div className="alert alert-error">{error}</div>}
+        {success && <div className="alert alert-success">{success}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="name">Full Name</label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              className="form-input"
+              placeholder="Jane Doe"
+              value={form.name}
+              onChange={handleChange}
+              autoComplete="name"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              className="form-input"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={handleChange}
+              autoComplete="email"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="password">Password</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              className="form-input"
+              placeholder="Min. 6 characters"
+              value={form.password}
+              onChange={handleChange}
+              autoComplete="new-password"
+            />
+          </div>
+
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? 'Creating account…' : 'Create Account'}
+          </button>
+        </form>
+
+        <div className="form-footer">
+          Already have an account?{' '}
+          <Link to="/login">Sign in</Link>
+        </div>
+      </div>
     </div>
   );
 }
 
-const styles = {
-  container: {
-    width: "300px",
-    margin: "100px auto",
-    padding: "20px",
-    border: "1px solid #ddd",
-    borderRadius: "10px",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-    textAlign: "center",
-  },
-  heading: {
-    fontSize: "24px",
-    marginBottom: "20px",
-  },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-  },
-  input: {
-    padding: "10px",
-    margin: "10px 0",
-    border: "1px solid #ddd",
-    borderRadius: "5px",
-    fontSize: "16px",
-  },
-  button: {
-    padding: "10px",
-    backgroundColor: "#282c34",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    fontSize: "16px",
-  },
-};
+export default SignUp;

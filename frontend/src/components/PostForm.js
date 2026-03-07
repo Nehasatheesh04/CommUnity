@@ -1,117 +1,95 @@
 import React, { useState } from "react";
-import axios from "axios"; // Ensure axios is imported
-import { useNavigate } from "react-router-dom"; // For redirection
+import axios from "axios";
 
-const PostForm = () => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("All");
-  const [message, setMessage] = useState(""); // State for success message
-  const navigate = useNavigate(); // React Router navigation hook
+const API = window.location.hostname === 'localhost' ? 'http://localhost:4000' : '';
+
+
+
+const PostForm = ({ onPostCreated }) => {
+  const [caption, setCaption] = useState("");
+  const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!caption.trim()) {
+      setError("Caption is required.");
+      return;
+    }
 
-    const newPost = {
-      title,
-      description,
-      category,
-    };
+    setLoading(true);
+    setError("");
+
+    const formData = new FormData();
+    formData.append("caption", caption);
+    if (image) {
+      formData.append("image", image);
+    }
 
     try {
-      // Send the post data to the backend
-      const response = await axios.post("http://localhost:4000/api/v1/posts", newPost);
-      
-      if (response.status === 201) {
-        // If the post is successfully saved, show the success message
-        setMessage("Post successfully created!");
-        
-        // Redirect to the post feed page after 1.5 seconds
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      }
-    } catch (error) {
-      console.error("Error creating post:", error);
-      setMessage("An error occurred. Please try again.");
+      const token = localStorage.getItem("cu_token");
+      await axios.post(`${API}/api/posts`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setCaption("");
+      setImage(null);
+      // Reset file input
+      document.getElementById("post-image-input").value = "";
+
+      if (onPostCreated) onPostCreated();
+    } catch (err) {
+      console.error("Error creating post:", err);
+      setError(err.response?.data?.message || "Failed to create post.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>Create New Post</h2>
-      {message && <p>{message}</p>} {/* Display success or error message */}
+    <div className="card" style={{ maxWidth: "100%", marginBottom: "40px", padding: "24px" }}>
+      <h2 className="card-title" style={{ fontSize: "18px" }}>Create Post</h2>
+
+      {error && <div className="alert alert-error">{error}</div>}
+
       <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            Title:
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              style={{ padding: "5px", margin: "5px", width: "300px" }}
-            />
-          </label>
+        <div className="form-group">
+          <textarea
+            className="form-input"
+            placeholder="Share your thoughts, ask for help..."
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            rows={3}
+            style={{ resize: "none" }}
+          />
         </div>
 
-        <div>
-          <label>
-            Description:
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              style={{ padding: "5px", margin: "5px", width: "300px", height: "100px" }}
-            />
+        <div className="form-group">
+          <label className="form-label" htmlFor="post-image-input">
+            Upload Image (Optional)
           </label>
+          <input
+            id="post-image-input"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="form-input"
+            style={{ padding: "8px" }}
+          />
         </div>
 
-        <div>
-          <label>
-            Category:
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-              style={{ padding: "5px", margin: "5px" }}
-            >
-              <option value="All">All</option>
-              <option value="Lend Items">Lend Items</option>
-              <option value="Services">Services</option>
-              <option value="General">General</option>
-              <option value="Pay for Work">Pay for Work</option>
-            </select>
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          style={{
-            padding: "10px 15px",
-            backgroundColor: "#007BFF",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            marginTop: "10px",
-            cursor: "pointer",
-          }}
-        >
-          Submit Post
+        <button type="submit" className="btn btn-primary" disabled={loading}>
+          {loading ? "Posting..." : "Post"}
         </button>
       </form>
-
-      {/* Display success/error message */}
-      {message && (
-        <p
-          style={{
-            marginTop: "10px",
-            color: message.includes("successfully") ? "green" : "red",
-          }}
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 };

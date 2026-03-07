@@ -1,63 +1,73 @@
-# CommUnity
+# CommUnity 🤝
 
-Team Name: Hack'A'Trek
+A simple, full-stack social platform for students to share posts and chat in real-time.
 
-Team Members:
-Member 1: Swani Madhoop -[CUSAT]
-Member 2: Neha A. S. -[CUSAT]
-Member 3: Ganga Kailas -[CUSAT]
+## 🚀 Features
 
-Hosted Project Link
-https://comm-unity-frontend.vercel.app/
+- **Authentication**: Secure Login and Sign-up system.
+- **Community Feed**: Post updates with image uploads.
+- **Real-time Chat**: Instant messaging powered by Socket.IO.
+- **Responsive Design**: Minimalist black-and-white aesthetic.
 
-App Demo Video
-https://drive.google.com/file/d/1z4QM19qwIpmPk4xZti7KfmJVPBSBY-A_/view?usp=sharing
+## 🛠️ Tech Stack
 
-Project Description
-CommUnity is a social platform designed to connect individuals within local communities. It allows users to create profiles, share posts, join discussions, and engage with others based on common interests. The app leverages real-time communication features, providing seamless interactions and building stronger local connections.
+- **Frontend**: React, Axios, Socket.IO Client.
+- **Backend**: Node.js, Express, MongoDB (Mongoose).
+- **Real-time**: Socket.IO.
+- **Storage**: Multer (Local disk storage for uploads).
 
-The Problem Statement
-Many local communities lack a centralized platform for individuals to connect, share ideas, and collaborate. CommUnity addresses this gap by providing a social networking platform focused on building stronger local connections and fostering real-time communication.
+## 📂 Project Structure
 
-The Solution
-We stumbled upon the solution while brainstorming over coffee (and maybe a bit of code). Realizing that everyone loves to chat, share ideas, and make connections, we decided to build a space where local communities could come together digitally, share experiences, and create events.
+```text
+CommUnity/
+├── backend/           # Express API & Socket.IO server
+├── frontend/          # React application
+├── uploads/           # User-uploaded images (posts)
+├── render.yaml        # Deployment blueprint for Render
+└── package.json       # Unified root configuration
+```
 
-Technical Details
-Technologies/Components Used
-For Software
-Language Used: Javascript(for both frontend and backend)
-Frameworks Used: React.js, Node.js, Express.js
-Libraries used: React Router, JWT, Axios, Mongoose, Bcrypt, Dotenv
-Tools used: MongoDB Atlas, Postman, Git, VS Code, npm
+## 💻 Local Development
 
-Implementation(For software)
-The implementation of the software involves setting up a React.js frontend where users can register, log in, and post issues categorized into four groups. The Node.js backend, powered by Express.js, handles user authentication, stores posts in a MongoDB database, and allows users to like and comment on posts. Users must be logged in to post, and all actions like commenting and liking are stored and managed in the backend. The project is deployed with MongoDB Atlas for database hosting and the frontend and backend on platforms like Heroku or Netlify.
+1. **Install Dependencies**:
+   ```bash
+   npm install
+   cd backend && npm install
+   cd ../frontend && npm install
+   ```
+2. **Setup Environment**:
+   Create a `backend/config/config.env` with:
+   ```env
+   PORT=4000
+   MONGO_URI=your_mongodb_uri
+   JWT_SECRET_KEY=your_secret
+   FRONTEND_URL=http://localhost:3000
+   ```
+3. **Run the App**:
+   ```bash
+   npm run dev
+   ```
+   *Frontend: http://localhost:3000 | Backend: http://localhost:4000*
 
-Installation Commands:
-npm install
-npm axios react-router-dom
-npm mongoose
+## 🌐 Deployment (Render)
 
-Run Commands: 
-npm start(frontend)
-npm run dev(backend)
+This project is optimized for deployment as a single **Web Service** on Render.
 
-Project Documentation
-for Software
-![Feed Page](/Users/mkailasnath/Desktop/Screenshot 2025-01-26 at 10.39.08 AM.png)
-![Login Page](/Users/mkailasnath/Desktop/Screenshot 2025-01-26 at 10.39.33 AM.png)
-![Posting Page](/Users/mkailasnath/Desktop/Screenshot 2025-01-26 at 10.40.18 AM.png)
+1. **Push to GitHub**: Push your code to a GitHub repository.
+2. **Create New Service**:
+   - Go to [Render Dashboard](https://dashboard.render.com).
+   - Click **New** > **Web Service**.
+   - Connect your GitHub repo.
+3. **Configure Service**:
+   - **Environment**: `Node`
+   - **Build Command**: `npm install && cd backend && npm install && cd ../frontend && npm install && npm run build`
+   - **Start Command**: `cd backend && npm start`
+4. **Add Environment Variables**:
+   - `MONGO_URI`: Your MongoDB connection string.
+   - `JWT_SECRET_KEY`: A long secret string.
+   - `NODE_VERSION`: `18.17.0` (or higher).
+5. **Deploy**: Click **Create Web Service**.
 
+## 📄 License
 
-Team Contributions
-Swani Madhoop: Webpage frontend cum backnd development
-Neha A. S: Backend and Database Management
-Ganga Kailas: Authentication
-
-Made with ❤️ at TinkerHub
-
-
-
-
-
-
+This is a student portfolio project. Feel free to use and modify it!

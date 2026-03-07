@@ -1,60 +1,59 @@
-import Post from "../models/Post.js"; // Assuming Post is your Mongoose model
-
-// Fetch all posts
-export const getPosts = async (req, res) => {
-  try {
-    const posts = await Post.find(); // Fetch posts from the database
-    res.status(200).json(posts); // Return posts as a JSON response
-  } catch (error) {
-    res.status(500).json({ message: "An error occurred while fetching posts." });
-  }
-};
+import Post from "../models/Post.js";
 
 // Create a new post
 export const createPost = async (req, res) => {
-  const { title, description, category } = req.body;
+  const { caption } = req.body;
+  const { _id: userId, name: username } = req.user;
 
-  if (!title || !description || !category) {
-    return res.status(400).json({ message: "All fields are required." });
+  if (!caption) {
+    return res.status(400).json({ success: false, message: "Caption is required." });
   }
 
   try {
+    let imageUrl = "";
+    if (req.file) {
+      // Store the relative path to be served statically
+      imageUrl = `/uploads/posts/${req.file.filename}`;
+    }
+
     const newPost = new Post({
-      title,
-      description,
-      category,
+      userId,
+      username,
+      caption,
+      imageUrl,
     });
 
     const savedPost = await newPost.save();
     res.status(201).json({
+      success: true,
       message: "Post created successfully!",
       post: savedPost,
     });
   } catch (error) {
-    res.status(500).json({ message: "An error occurred while creating the post." });
+    console.error("Error creating post:", error);
+    res.status(500).json({ success: false, message: "An error occurred while creating the post." });
   }
 };
 
-// Add a comment to a post
-export const addComment = async (req, res) => {
-
+// Fetch all posts (newest first)
+export const getPosts = async (req, res) => {
   try {
-    const { postId } = req.params; // Extract the post ID from the URL
-    const {  comment } = req.body; // Extract user and comment from the request body
-
-    // Find the post by ID
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ success: false, message: "Post not found" });
-    }
-
-    // Add the new comment to the post's comments array
-    post.comments.push({  comment });
-    await post.save();
-
-    res.status(200).json({ success: true, message: "Comment added successfully", post });
+    const posts = await Post.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, posts });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error fetching posts:", error);
+    res.status(500).json({ success: false, message: "An error occurred while fetching posts." });
   }
 };
-   
+
+// Fetch posts by a specific user
+export const getUserPosts = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const posts = await Post.find({ userId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, posts });
+  } catch (error) {
+    console.error("Error fetching user posts:", error);
+    res.status(500).json({ success: false, message: "An error occurred while fetching user posts." });
+  }
+};

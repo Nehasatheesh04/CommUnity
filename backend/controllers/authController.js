@@ -2,34 +2,40 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-// Login Handler
+// POST /api/v1/auth/login
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
+  if (!email || !password) {
+    return res.status(400).json({ success: false, message: 'Email and password are required.' });
+  }
+
   try {
-    // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      return res.status(400).json({ success: false, message: "User not found" });
+      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    // Compare password with hashed password in DB
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: "Invalid credentials" });
+      return res.status(400).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    // Create JWT token
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign(
+      { id: user._id, name: user.name },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: '7d' }
+    );
 
-    // Send response with token
     res.status(200).json({
       success: true,
-      message: "Login successful",
-      token, // Send the token to the client
+      message: 'Login successful.',
+      token,
+      name: user.name,
+      email: user.email,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Server error. Please try again.' });
   }
 };
-

@@ -1,28 +1,18 @@
 services:
-  # Backend Service Configuration
   - type: web
-    name: community-backend
+    name: community-app
     env: node
-    branch: main
-    buildCommand: npm install
-    startCommand: npm start
+    plan: free
+    buildCommand: npm install && cd backend && npm install && cd ../frontend && npm install && npm run build
+    startCommand: cd backend && npm start
     envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
       - key: PORT
-        value: 4000
+        value: 10000
       - key: MONGO_URI
-        value: <YOUR_MONGO_DB_CONNECTION_STRING>
-      - key: JWT_SECRET
-        value: <YOUR_JWT_SECRET>
-    autoDeploy: true
-
-  # Frontend Service Configuration
-  - type: web
-    name: community-frontend
-    env: node
-    branch: main
-    buildCommand: npm install && npm run build
-    startCommand: npx serve -s build -l ${PORT}
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://community-backend.onrender.com
-    autoDeploy: true
+        fromContext: true
+      - key: JWT_SECRET_KEY
+        fromContext: true
+      - key: FRONTEND_URL
+        value: https://community-app.onrender.com
