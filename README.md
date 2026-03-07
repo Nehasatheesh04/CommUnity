@@ -16,17 +16,6 @@ A simple, full-stack social platform for students to share posts and chat in rea
 - **Real-time**: Socket.IO.
 - **Storage**: Multer (Local disk storage for uploads).
 
-## 📂 Project Structure
-
-```text
-CommUnity/
-├── backend/           # Express API & Socket.IO server
-├── frontend/          # React application
-├── uploads/           # User-uploaded images (posts)
-├── render.yaml        # Deployment blueprint for Render
-└── package.json       # Unified root configuration
-```
-
 ## 💻 Local Development
 
 1. **Install Dependencies**:
