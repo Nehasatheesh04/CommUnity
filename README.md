@@ -40,23 +40,6 @@ A simple, full-stack social platform for students to share posts and chat in rea
 
 ## 🌐 Deployment (Render)
 
-This project is optimized for deployment as a single **Web Service** on Render.
+https://community-app-i32z.onrender.com
 
-1. **Push to GitHub**: Push your code to a GitHub repository.
-2. **Create New Service**:
-   - Go to [Render Dashboard](https://dashboard.render.com).
-   - Click **New** > **Web Service**.
-   - Connect your GitHub repo.
-3. **Configure Service**:
-   - **Environment**: `Node`
-   - **Build Command**: `npm install && cd backend && npm install && cd ../frontend && npm install && npm run build`
-   - **Start Command**: `cd backend && npm start`
-4. **Add Environment Variables**:
-   - `MONGO_URI`: Your MongoDB connection string.
-   - `JWT_SECRET_KEY`: A long secret string.
-   - `NODE_VERSION`: `18.17.0` (or higher).
-5. **Deploy**: Click **Create Web Service**.
 
-## 📄 License
-
-This is a student portfolio project. Feel free to use and modify it!
