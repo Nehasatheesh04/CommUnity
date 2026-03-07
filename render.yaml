@@ -11,8 +11,11 @@ services:
       - key: PORT
         value: 10000
       - key: MONGO_URI
-        fromContext: true
+        value: "REPLACE_ME_IN_RENDER_DASHBOARD"
+        sync: false
       - key: JWT_SECRET_KEY
-        fromContext: true
+        value: "REPLACE_ME_IN_RENDER_DASHBOARD"
+        sync: false
+
       - key: FRONTEND_URL
         value: https://community-app.onrender.com
